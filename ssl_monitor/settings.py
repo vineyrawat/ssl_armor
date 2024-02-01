@@ -28,7 +28,7 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 
-# Application definition
+# `App`lication definition
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -40,7 +40,12 @@ INSTALLED_APPS = [
     'ssl_monitor_app',
     'corsheaders',
     'rest_framework',
-    'rest_framework.authtoken'
+    'rest_framework.authtoken',
+    'django_crontab'
+]
+
+CRONJOBS = [
+    ('*/2 * * * *', 'ssl_monitor_app.cron_jobs.sync_ssl_certificates')
 ]
 
 
