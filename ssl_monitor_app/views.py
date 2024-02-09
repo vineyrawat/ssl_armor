@@ -1,8 +1,8 @@
 from django.shortcuts import render
-from rest_framework import generics, permissions, status
+from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import ServerSSLCertificate
+from .models import ServerSSLCertificate, EmailAccounts
 from .ssl_service import get_ssl_certificate_details
 
 # Create your views here.
@@ -48,3 +48,54 @@ def get_servers(request):
     servers = ServerSSLCertificate.objects.all()
 
     return Response({"servers":[server.to_dict() for server in servers],"count": len(servers)})
+
+@api_view(["POST"])
+def update_email_config(request):
+    """
+    Updates the email configuration based on the request data.
+
+    Parameters:
+    - request: The HTTP request object containing the data to update the email configuration.
+
+    Returns:
+    - Response: The HTTP response object containing the updated email account in a dictionary format.
+    """
+    email_account = EmailAccounts.objects.first()
+    if email_account:
+        email_account.enabled = request.data.get("enabled")
+        email_account.host = request.data.get("host")
+        email_account.port = request.data.get("port")
+        email_account.use_tls = request.data.get("use_tls")
+        email_account.username = request.data.get("username")
+        email_account.password = request.data.get("password")
+        email_account.default_sender = request.data.get("default_sender")
+        email_account.save()
+    else:
+        email_account = EmailAccounts(
+            host=request.data.get("host"),
+            enabled=request.data.get("enabled"),
+            port=request.data.get("port"),
+            use_tls=request.data.get("use_tls"),
+            username=request.data.get("username"),
+            password=request.data.get("password"),
+            default_sender=request.data.get("default_sender")
+        )
+        email_account.save()
+    return Response({"email_account": email_account.to_dict()})
+
+
+@api_view(["GET"])
+def test_email(request):
+    email_account = EmailAccounts.objects.first()
+    if email_account:
+        res = email_account.test_connection()
+        print(res)
+    return Response({"email_account": email_account.to_dict()})
+
+@api_view(["GET"])
+def get_email_config(request):
+    email_account = EmailAccounts.objects.first()
+    if email_account:
+        return Response({"email_account": email_account.to_dict()})
+    else:
+        return Response({"email_account": None})
