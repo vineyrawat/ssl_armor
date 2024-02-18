@@ -1,7 +1,4 @@
 from django.db import models
-
-# Create your models here.
-from django.db import models
 import django
 import uuid
 from django.core.mail import EmailMessage, get_connection
@@ -85,18 +82,15 @@ class ServerSSLCertificate(models.Model):
             'modified_time': self.modified_time
         }
 
-
-from django.db import models
-
 class EmailAccounts(models.Model):
     name =  models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     enabled = models.BooleanField(default=True)
-    host = models.CharField(max_length=100)
-    port = models.IntegerField()
-    use_tls = models.BooleanField(default=True)
-    username = models.EmailField()
-    password = models.CharField(max_length=100)
-    default_sender = models.EmailField()
+    host = models.CharField(max_length=100, blank=True, null=True)
+    port = models.IntegerField(blank=True, null=True)
+    use_tls = models.BooleanField(default=True, blank=True, null=True)
+    username = models.EmailField(blank=True, null=True)
+    password = models.CharField(max_length=100, blank=True, null=True)
+    default_sender = models.EmailField(blank=True, null=True)
     creation_time = models.DateTimeField(default=django.utils.timezone.now)
     modified_time = models.DateTimeField(default=django.utils.timezone.now)
 
@@ -131,7 +125,7 @@ class EmailAccounts(models.Model):
             'port': self.port,
             'use_tls': self.use_tls,
             'username': self.username,
-            'password': self.password,
+            'password': '**********' if self.password else None,
             'default_sender': self.default_sender,
             'creation_time': self.creation_time,
             'modified_time': self.modified_time

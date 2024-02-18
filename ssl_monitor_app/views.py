@@ -62,13 +62,13 @@ def update_email_config(request):
     """
     email_account = EmailAccounts.objects.first()
     if email_account:
-        email_account.enabled = request.data.get("enabled")
-        email_account.host = request.data.get("host")
-        email_account.port = request.data.get("port")
-        email_account.use_tls = request.data.get("use_tls")
-        email_account.username = request.data.get("username")
-        email_account.password = request.data.get("password")
-        email_account.default_sender = request.data.get("default_sender")
+        email_account.enabled = request.data.get("enabled") or email_account.enabled
+        email_account.host = request.data.get("host") or email_account.host
+        email_account.port = request.data.get("port")or email_account.port
+        email_account.use_tls = request.data.get("use_tls") or email_account.use_tls
+        email_account.username = request.data.get("username") or email_account.username
+        email_account.password = request.data.get("password") or email_account.password
+        email_account.default_sender = request.data.get("default_sender") or email_account.default_sender
         email_account.save()
     else:
         email_account = EmailAccounts(
