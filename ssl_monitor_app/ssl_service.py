@@ -8,11 +8,14 @@ from datetime import datetime
 def get_ssl_certificate_details(domain):
     context = ssl.create_default_context()
     with socket.create_connection((domain, 443)) as sock:
-        with context.wrap_socket(sock, server_hostname=domain) as ssock:
-            cert = ssock.getpeercert()
-            # cert =  json.dumps(cert, indent=2)
-            updated_server = update_ssl_details_in_db(domain, cert)
-            return updated_server
+        try:
+            with context.wrap_socket(sock, server_hostname=domain) as ssock:
+                cert = ssock.getpeercert()
+                # cert =  json.dumps(cert, indent=2)
+                updated_server = update_ssl_details_in_db(domain, cert)
+                return updated_server
+        except Exception as e:
+            print(e)
 
 # certificate_details = get_ssl_certificate_details("core.extensionerp.com")
 # print(certificate_details)

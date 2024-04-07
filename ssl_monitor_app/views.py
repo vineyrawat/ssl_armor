@@ -4,10 +4,23 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import ServerSSLCertificate, EmailAccounts
 from .ssl_service import get_ssl_certificate_details
+from django.contrib.auth import login
+from knox.auth import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import authentication_classes, permission_classes
 
-# Create your views here.
-def login(request):
-    return render(request, "login.html")
+# rest_framework imports
+from rest_framework import generics, authentication, permissions
+from rest_framework.settings import api_settings
+from rest_framework.authtoken.serializers import AuthTokenSerializer
+
+# knox imports
+from knox.views import LoginView as KnoxLoginView
+from knox.auth import TokenAuthentication
+
+
+from ssl_monitor_app.serializers import AuthSerializer, UserSerializer
+from rest_framework.authentication import SessionAuthentication
 
 
 @api_view(["POST"])
@@ -33,8 +46,9 @@ def force_sync(request):
     updated_servers = get_ssl_certificate_details(request.data.get("domain"))
     return Response({"servers":updated_servers,"count": len(updated_servers)})
 
-
 @api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def get_servers(request):
     """
     List servers available in database.
@@ -44,7 +58,6 @@ def get_servers(request):
     Response:
     - 200 OK: Successful response.
     """
-    # user = request.GET.get('user')
     servers = ServerSSLCertificate.objects.all()
 
     return Response({"servers":[server.to_dict() for server in servers],"count": len(servers)})
@@ -99,3 +112,31 @@ def get_email_config(request):
         return Response({"email_account": email_account.to_dict()})
     else:
         return Response({"email_account": None})
+    
+
+
+class LoginView(KnoxLoginView):
+    # login view extending KnoxLoginView
+    serializer_class = AuthSerializer
+    permission_classes = (permissions.AllowAny,)
+
+    def post(self, request, format=None):
+        serializer = AuthTokenSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        login(request, user)
+        return super(LoginView, self).post(request, format=None)
+
+
+class ManageUserView(generics.RetrieveUpdateAPIView):
+    """Manage the authenticated user"""
+    serializer_class = UserSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_object(self):
+        """Retrieve and return authenticated user"""
+        return self.request.user
+    
+class CreateUserView(generics.CreateAPIView):
+    # Create user API view
+    serializer_class = UserSerializer
